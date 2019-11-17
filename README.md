@@ -1,3 +1,10 @@
+## Forked from @react-native-community/react-native-audio-toolkit
+- added event callback for audio recording visualization
+- not tested on iOS
+```
+npm install --save @naeemur/react-native-audio-toolkit
+```
+
 ![banner](/banner.png)
 
 [![npm version](https://badge.fury.io/js/%40react-native-community%2Faudio-toolkit.svg)](https://badge.fury.io/js/%40react-native-community%2Faudio-toolkit)

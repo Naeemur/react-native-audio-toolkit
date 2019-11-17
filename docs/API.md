@@ -161,7 +161,7 @@ p.prepare((err) => {
     ```
 
     NOTE: This object is available as
-    `require('@react-native-community/audio-toolkit').MediaStates`
+    `require('@naeemur/react-native-audio-toolkit').MediaStates`
 
 * Helpers for states - Boolean (**read only**)
 
@@ -211,6 +211,10 @@ Player.isPrepared   true if player is prepared
       // Quality of the recording, iOS only.
       // Possible values: 'min', 'low', 'medium', 'high', 'max'
       quality : String (default: 'medium')
+      // Capture sound level
+      // value > 0 emits "frame" event on every specified ms interval (Integer only)
+      // value == 0 means no event will be emitted
+      frameInterval: Integer (default: 0)
     }
     ```
 
@@ -271,7 +275,7 @@ Player.isPrepared   true if player is prepared
     ```
 
     NOTE: This object is available as
-    `require('@react-native-community/audio-toolkit').MediaStates`
+    `require('@naeemur/react-native-audio-toolkit').MediaStates`
 
 * `fsPath` - String (**read only**)
 
@@ -301,8 +305,16 @@ are supported:
 
 * `looped` - Playback of a file has looped.
 
+* `frame` - (Recorder only) emitted with mic input volume level data on every interval specified by frameInterval while recording. Returned data:
+```
+{
+  "id",             // frame number
+  "value",          // sound level in decibels, -160 is a silence level
+  "rawValue"        // raw level value, OS-dependent
+}
+```
 
-Listen to these events with  `player.on('eventname', callback(data))`.  Data
+Listen to these events with  `instance.on('eventname', callback(data))`.  Data
 may contain additional information about the event, for example a more detailed
 description of the error that occurred. You might also want to update your user
 interface or start playing a new file after file playback or recording has

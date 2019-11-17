@@ -7,13 +7,13 @@ an actual Android/iOS device:
 
 1. Install library via npm:
     ```
-    npm install --save @react-native-community/audio-toolkit
+    npm install --save @naeemur/react-native-audio-toolkit
     ```
 
 2. Link the library by either:
     1. Linking automatically using:
         ```
-        react-native link @react-native-community/audio-toolkit
+        react-native link @naeemur/react-native-audio-toolkit
         ```
     2. Linking manually by following steps 1-3 of the Android/iOS setup below.
 
@@ -28,8 +28,8 @@ an actual Android/iOS device:
     ```
     ...
 
-    include ':@react-native-community_audio-toolkit'
-    project(':@react-native-community_audio-toolkit').projectDir = new File(rootProject.projectDir, '../node_modules/@react-native-community/audio-toolkit/android')
+    include ':@naeemur_react-native-audio-toolkit'
+    project(':@naeemur_react-native-audio-toolkit').projectDir = new File(rootProject.projectDir, '../node_modules/@naeemur/react-native-audio-toolkit/android')
     ```
 
 2. Add dependency to `android/app/build.gradle`
@@ -39,7 +39,7 @@ an actual Android/iOS device:
 
     dependencies {
         ...
-        implementation project(':@react-native-community_audio-toolkit')
+        implementation project(':@naeemur_react-native-audio-toolkit')
     }
     ```
 
@@ -104,7 +104,7 @@ React Native 0.59 and earlier:
 
 1. Right click `Libraries`, click `Add Files to "ExampleApp"`
 
-2. Select `node_modules/@react-native-community/audio-toolkit/ios/ReactNativeAudioToolkit/ReactNativeAudioToolkit.xcodeproj`
+2. Select `node_modules/@naeemur/react-native-audio-toolkit/ios/ReactNativeAudioToolkit/ReactNativeAudioToolkit.xcodeproj`
 
 3. Select your app from the Project Navigator, click on the `Build Phases` tab.
     Expand `Link Binary With Libraries`. Click the plus and add
@@ -127,7 +127,7 @@ React Native 0.60 and later
         Player,
         Recorder,
         MediaStates
-    } from '@react-native-community/audio-toolkit';
+    } from '@naeemur/react-native-audio-toolkit';
 
     ...
     ```

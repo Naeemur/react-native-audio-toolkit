@@ -12,6 +12,7 @@
 #import "RCTEventDispatcher.h"
 //#import "RCTEventEmitter"
 #import "Helpers.h"
+// #import <AVFoundation/AVFoundation.h>// naeem: add
 
 @import AVFoundation;
 
@@ -22,6 +23,14 @@
 @end
 
 @implementation AudioRecorder
+{// naeem: add
+    AVAudioRecorder *_recorder;
+    id _progressUpdateTimer;
+    int _frameId;
+    int _progressUpdateInterval;
+    NSDate *_prevProgressUpdateTime;
+    NSNumber *monitorInterval;
+}
 
 @synthesize bridge = _bridge;
 
@@ -100,6 +109,11 @@ RCT_EXPORT_METHOD(prepare:(nonnull NSNumber *)recorderId
     // Settings for the recorder
     NSDictionary *recordSetting = [Helpers recorderSettingsFromOptions:options];
     
+    NSNumber *frameInterval = [options objectForKey:@"frameInterval"];// naeem: add
+    monitorInterval = frameInterval ? frameInterval : @0;// naeem: add
+    _prevProgressUpdateTime = nil;// naeem: add
+    [self stopProgressTimer];// naeem: add
+    
     // Initialize a new recorder
     AVAudioRecorder *recorder = [[AVAudioRecorder alloc] initWithURL:url settings:recordSetting error:&error];
     if (error) {
@@ -126,13 +140,18 @@ RCT_EXPORT_METHOD(prepare:(nonnull NSNumber *)recorderId
         callback(@[dict]);
         return;
     }
-    
+    recorder.meteringEnabled = YES;// naeem: add
     callback(@[[NSNull null], filePath]);
 }
 
 RCT_EXPORT_METHOD(record:(nonnull NSNumber *)recorderId withCallback:(RCTResponseSenderBlock)callback) {
     AVAudioRecorder *recorder = [[self recorderPool] objectForKey:recorderId];
     if (recorder) {
+        if (monitorInterval > 0) {// naeem: add
+            _frameId = 0;
+            _recorder = recorder;
+            [self startProgressTimer:monitorInterval];
+        }
         if (![recorder record]) {
             NSDictionary* dict = [Helpers errObjWithCode:@"startfail" withMessage:@"Failed to start recorder"];
             callback(@[dict]);
@@ -150,6 +169,7 @@ RCT_EXPORT_METHOD(stop:(nonnull NSNumber *)recorderId withCallback:(RCTResponseS
     AVAudioRecorder *recorder = [[self recorderPool] objectForKey:recorderId];
     if (recorder) {
         [recorder stop];
+        _prevProgressUpdateTime = nil;// naeem: add
     } else {
         NSDictionary* dict = [Helpers errObjWithCode:@"notfound" withMessage:@"Recorder with that id was not found"];
         callback(@[dict]);
@@ -208,6 +228,36 @@ RCT_EXPORT_METHOD(destroy:(nonnull NSNumber *)recorderId withCallback:(RCTRespon
                                                body:@{@"event": @"error",
                                                       @"data" : [error description]
                                                       }];
+}
+
+// naeem: add
+- (void)sendProgressUpdate {
+  if (!_recorder || !_recorder.isRecording) {
+    return;
+  }
+  if (_prevProgressUpdateTime == nil ||
+   (([_prevProgressUpdateTime timeIntervalSinceNow] * -1000.0) >= _progressUpdateInterval)) {
+      _frameId++;
+      NSMutableDictionary *body = [[NSMutableDictionary alloc] init];
+      [body setObject:[NSNumber numberWithFloat:_frameId] forKey:@"id"];
+      [_recorder updateMeters];
+      float _currentLevel = [_recorder averagePowerForChannel: 0];
+      [body setObject:[NSNumber numberWithFloat:_currentLevel] forKey:@"value"];
+      [body setObject:[NSNumber numberWithFloat:_currentLevel] forKey:@"rawValue"];
+      [self.bridge.eventDispatcher sendAppEventWithName:@"frame" body:body];
+    _prevProgressUpdateTime = [NSDate date];
+  }
+}
+// naeem: add
+- (void)stopProgressTimer {
+  [_progressUpdateTimer invalidate];
+}
+// naeem: add
+- (void)startProgressTimer:(int)monitorInterval {
+  _progressUpdateInterval = monitorInterval;
+  [self stopProgressTimer];
+  _progressUpdateTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(sendProgressUpdate)];
+  [_progressUpdateTimer addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
 }
 
 @end

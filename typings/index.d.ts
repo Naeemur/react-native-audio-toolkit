@@ -235,6 +235,17 @@ interface RecorderOptions {
      * (Default: 'medium')
      */
     quality: string;
+
+    /**
+     * Capture sound level
+     * 
+     * value > 0 emits "frame" event on every specified ms interval (Integer only)
+     * 
+     * value == 0 means no event will be emitted
+     * 
+     * (Default: 0)
+     */
+    frameInterval: number;
 }
 
 /**

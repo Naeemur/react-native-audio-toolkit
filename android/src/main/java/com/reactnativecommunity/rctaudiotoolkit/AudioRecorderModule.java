@@ -4,7 +4,7 @@ import android.annotation.TargetApi;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Log;
 import android.net.Uri;
 import android.webkit.URLUtil;
@@ -30,12 +30,21 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
+import java.util.Timer;// naeem: add
+import java.util.TimerTask;// naeem: add
+
 public class AudioRecorderModule extends ReactContextBaseJavaModule implements
         MediaRecorder.OnInfoListener, MediaRecorder.OnErrorListener {
     private static final String LOG_TAG = "AudioRecorderModule";
 
     Map<Integer, MediaRecorder> recorderPool = new HashMap<>();
     Map<Integer, Boolean> recorderAutoDestroy = new HashMap<>();
+
+    private Timer timer;// naeem: add
+    private int frameId = 0;// naeem: add
+    private int frameTiming = 0;// naeem: add
+    private MediaRecorder recorderGlobal;// naeem: add
+    private Integer recorderIdGlobal;// naeem: add
 
     private ReactApplicationContext context;
 
@@ -192,6 +201,7 @@ public class AudioRecorderModule extends ReactContextBaseJavaModule implements
         int bitrate = 128000;
         int channels = 2;
         int sampleRate = 44100;
+        int frameInterval = 0;// naeem: add
 
         if (options.hasKey("format")) {
             format = formatFromName(options.getString("format"));
@@ -208,7 +218,11 @@ public class AudioRecorderModule extends ReactContextBaseJavaModule implements
         if (options.hasKey("sampleRate")) {
             sampleRate = options.getInt("sampleRate");
         }
+        if (options.hasKey("frameInterval")) {// naeem: add
+            frameInterval = options.getInt("frameInterval");
+        }
 
+        frameTiming = frameInterval;
         recorder.setOutputFormat(format);
         recorder.setAudioEncoder(encoder);
         recorder.setAudioEncodingBitRate(bitrate);
@@ -253,7 +267,10 @@ public class AudioRecorderModule extends ReactContextBaseJavaModule implements
 
         try {
             recorder.start();
-
+            if (frameTiming > 0) {// naeem: add
+                frameId = 0;
+                startTimer(recorder);
+            }
             callback.invoke();
         } catch (Exception e) {
             callback.invoke(errObj("startfail", e.toString()));
@@ -267,7 +284,7 @@ public class AudioRecorderModule extends ReactContextBaseJavaModule implements
             callback.invoke(errObj("notfound", "recorderId " + recorderId + "not found."));
             return;
         }
-
+        stopTimer();// naeem: add
         try {
             recorder.stop();
             if (this.recorderAutoDestroy.get(recorderId)) {
@@ -354,5 +371,39 @@ public class AudioRecorderModule extends ReactContextBaseJavaModule implements
 
         emitEvent(recorderId, "info", data);
 
+    }
+
+    // naeem: add
+    private void startTimer(MediaRecorder recorder) {///
+        recorderIdGlobal = getRecorderId(recorder);///
+        recorderGlobal = recorder;///
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+
+                WritableMap body = Arguments.createMap();
+                body.putDouble("id", frameId++);
+
+                int amplitude = recorderGlobal.getMaxAmplitude();///
+                if (amplitude == 0) {
+                    body.putInt("value", -160);
+                    body.putInt("rawValue", 0);
+                } else {
+                    body.putInt("rawValue", amplitude);
+                    body.putInt("value", (int) (20 * Math.log(((double) amplitude) / 32767d)));
+                }
+
+                emitEvent(recorderIdGlobal, "frame", body);///+recorderIdGlobal
+            }
+        }, 0, frameTiming);///250->frameTiming
+    }
+    // naeem: add
+    private void stopTimer() {
+        if (timer != null) {
+            timer.cancel();
+            timer.purge();
+            timer = null;
+        }
     }
 }

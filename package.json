@@ -1,5 +1,5 @@
 {
-  "name": "@react-native-community/audio-toolkit",
+  "name": "@naeemur/react-native-audio-toolkit",
   "version": "2.0.2",
   "description": "Cross-platform audio library for React Native",
   "main": "index.js",
@@ -10,14 +10,14 @@
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start"
   },
-  "homepage": "https://github.com/react-native-community/react-native-audio-toolkit#readme",
+  "homepage": "https://github.com/naeemur/react-native-audio-toolkit#readme",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/react-native-community/react-native-audio-toolkit.git"
+    "url": "https://github.com/naeemur/react-native-audio-toolkit.git"
   },
   "bugs": {
-    "url": "https://github.com/react-native-community/react-native-audio-toolkit/issues"
+    "url": "https://github.com/naeemur/react-native-audio-toolkit/issues"
   },
   "dependencies": {
     "async": "^2.0.0",
